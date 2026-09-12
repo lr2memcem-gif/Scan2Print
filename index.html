@@ -243,12 +243,19 @@
   window.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('shared')) {
-      const cache = await caches.open('scan2print-share');
+      const cache = await caches.open('scan2print-share-v2');
       const cachedResponse = await cache.match('incoming_share');
       if (cachedResponse) {
         const blob = await cachedResponse.blob();
-        const ext = resolveExtension(blob.type);
-        activeFile = new File([blob], "Shared_Doc_" + Date.now() + "." + ext, { type: blob.type });
+        const rawName = cachedResponse.headers.get('X-Original-Name');
+        let fileName = rawName ? decodeURIComponent(rawName) : '';
+
+        if (!fileName || fileName.startsWith('blob') || !fileName.includes('.')) {
+          const ext = resolveExtension(blob.type);
+          fileName = "Shared_Doc_" + Date.now() + "." + ext;
+        }
+
+        activeFile = new File([blob], fileName, { type: blob.type });
         displayFile(activeFile);
         await cache.delete('incoming_share');
       }
