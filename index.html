@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan2Print - Mechanical Department</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --primary: #1e40af;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+      --success: #059669;
+      --mech-gold: #92400e;
+      --mech-bg: #fef3c7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; }
+    .container { background: var(--card); width: 100%; max-width: 420px; padding: 32px 24px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .header { text-align: center; margin-bottom: 24px; }
+    .dept-badge { display: inline-block; background: var(--mech-bg); color: var(--mech-gold); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 12px; }
+    h1 { font-size: 22px; margin-bottom: 4px; }
+    p { font-size: 13px; color: var(--text-muted); }
+    .dropzone { border: 2px dashed var(--border); border-radius: 8px; padding: 30px 16px; text-align: center; cursor: pointer; background: #fafafa; margin-top: 20px; }
+    .file-info { margin-top: 16px; font-size: 13px; background: #f8fafc; padding: 12px; border-radius: 6px; border-left: 4px solid var(--primary); word-break: break-all; font-weight: 600; display: none; }
+    .btn { display: block; width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 20px; }
+    .btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+    #status { margin-top: 16px; font-size: 14px; font-weight: 600; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="dept-badge">Mechanical Engineering Dept</div>
+    <h1>Scan2Print</h1>
+    <p>Direct Print Station Queue</p>
+  </div>
+
+  <div class="dropzone" onclick="document.getElementById('fileInput').click()">
+    <div style="font-size: 32px; margin-bottom: 8px;">📥</div>
+    <strong>Tap to select document</strong>
+    <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">PDF, Office Docs, Images</p>
+  </div>
+
+  <input type="file" id="fileInput" style="display:none;" accept=".pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .jpg, .png, .txt, .csv">
+  <div class="file-info" id="fileInfo"></div>
+  <button class="btn" id="uploadBtn" disabled onclick="uploadCurrentFile()">Upload & Print</button>
+  <div id="status"></div>
+</div>
+
+<script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwIrhCeTAL4oYVwa3wwI0MdYAbD8vieKzKI7CpTCMmX18XbmBmfZXNYgXN2eG0yReSvNg/exec";
+
+  let activeFile = null;
+  const fileInput = document.getElementById('fileInput');
+  const fileInfo = document.getElementById('fileInfo');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const statusDiv = document.getElementById('status');
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js');
+  }
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('shared')) {
+      const cache = await caches.open('scan2print-share');
+      const cachedResponse = await cache.match('incoming_share');
+      if (cachedResponse) {
+        const blob = await cachedResponse.blob();
+        activeFile = new File([blob], "WhatsApp_Doc_" + Date.now() + "." + (blob.type.split('/')[1] || 'pdf'), { type: blob.type });
+        displayFile(activeFile);
+        await cache.delete('incoming_share');
+      }
+    }
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      activeFile = e.target.files[0];
+      displayFile(activeFile);
+    }
+  });
+
+  function displayFile(file) {
+    fileInfo.textContent = `📄 ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
+    fileInfo.style.display = 'block';
+    uploadBtn.disabled = false;
+  }
+
+  function uploadCurrentFile() {
+    if (!activeFile) return;
+
+    uploadBtn.disabled = true;
+    statusDiv.style.color = "var(--primary)";
+    statusDiv.innerText = "⏳ Uploading to print queue...";
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64Data = e.target.result.split(',')[1];
+      const payload = {
+        fileName: activeFile.name,
+        mimeType: activeFile.type,
+        fileData: base64Data
+      };
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        statusDiv.style.color = "var(--success)";
+        statusDiv.innerText = "✅ Queued successfully! Printing on station.";
+        uploadBtn.disabled = true;
+      })
+      .catch(err => {
+        statusDiv.style.color = "#dc2626";
+        statusDiv.innerText = "❌ Upload Error: " + err.toString();
+        uploadBtn.disabled = false;
+      });
+    };
+    reader.readAsDataURL(activeFile);
+  }
+</script>
+</body>
+</html>
