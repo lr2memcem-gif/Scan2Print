@@ -1,0 +1,46 @@
+{
+  "name": "Scan2Print Kiosk",
+  "short_name": "Scan2Print",
+  "description": "Mechanical Department Print Station",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e40af",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "share_target": {
+    "action": "./index.html",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "name",
+      "files": [
+        {
+          "name": "shared_files",
+          "accept": [
+            "application/pdf",
+            "image/*",
+            ".doc",
+            ".docx",
+            ".xls",
+            ".xlsx",
+            ".ppt",
+            ".pptx",
+            ".txt",
+            ".csv"
+          ]
+        }
+      ]
+    }
+  }
+}
