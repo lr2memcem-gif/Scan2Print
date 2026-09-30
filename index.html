@@ -1,216 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scan2Print - Mechanical Department</title>
-  <link rel="manifest" href="manifest.json">
-  <style>
-    :root {
-      --primary: #1e40af;
-      --primary-hover: #1d4ed8;
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --badge-bg: #fef3c7;
-      --badge-text: #92400e;
-      --success: #16a34a;
-      --error: #dc2626;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px 16px;
-    }
-
-    .card {
-      background: var(--card);
-      width: 100%;
-      max-width: 440px;
-      padding: 32px 24px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-      text-align: center;
-    }
-
-    .gear-icon {
-      font-size: 38px;
-      line-height: 1;
-      margin-bottom: 8px;
-      display: inline-block;
-    }
-
-    .badge {
-      display: inline-block;
-      background: var(--badge-bg);
-      color: var(--badge-text);
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 4px 10px;
-      border-radius: 6px;
-      margin-bottom: 8px;
-    }
-
-    h1 {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--text-main);
-      margin-bottom: 4px;
-    }
-
-    .subtitle {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 24px;
-      line-height: 1.4;
-    }
-
-    .dropzone {
-      border: 2px dashed #cbd5e1;
-      border-radius: 12px;
-      padding: 28px 16px;
-      background: #fafbfc;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .dropzone.dragover {
-      border-color: var(--primary);
-      background: #eff6ff;
-    }
-
-    .tray-icon {
-      font-size: 34px;
-      margin-bottom: 8px;
-    }
-
-    .dropzone-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 4px;
-    }
-
-    .dropzone-sub {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 14px;
-    }
-
-    .format-pills {
-      font-size: 10.5px;
-      color: #64748b;
-      font-weight: 600;
-      line-height: 1.7;
-      letter-spacing: 0.3px;
-    }
-
-    .file-pill {
-      margin-top: 16px;
-      display: none;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      border-left: 4px solid var(--primary);
-      border-radius: 8px;
-      padding: 12px 14px;
-      text-align: left;
-      font-size: 13px;
-      font-weight: 600;
-      color: #1e3a8a;
-      word-break: break-all;
-    }
-
-    .btn {
-      width: 100%;
-      background: var(--primary);
-      color: #ffffff;
-      border: none;
-      padding: 14px;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 20px;
-      transition: background 0.15s ease;
-    }
-
-    .btn:hover:not(:disabled) {
-      background: var(--primary-hover);
-    }
-
-    .btn:disabled {
-      background: #cbd5e1;
-      color: #94a3b8;
-      cursor: not-allowed;
-    }
-
-    #status {
-      margin-top: 14px;
-      font-size: 13px;
-      font-weight: 600;
-      min-height: 20px;
-    }
-
-    .footer {
-      margin-top: 28px;
-      border-top: 1px solid var(--border);
-      padding-top: 16px;
-      font-size: 11px;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-
-    .footer strong {
-      color: #475569;
-    }
-  </style>
-</head>
-<body>
-
-<div class="card">
-  <div class="gear-icon">⚙️</div>
-  <div><span class="badge">Mechanical Engineering Dept</span></div>
-  <h1>Scan2Print</h1>
-  <p class="subtitle">Upload files directly to the department print queue</p>
-
-  <div class="dropzone" id="dropArea">
-    <div class="tray-icon">📥</div>
-    <div class="dropzone-title">Tap to select document</div>
-    <div class="dropzone-sub">You can also drag and drop a file here</div>
-    <div class="format-pills">
-      PDF • DOC • DOCX • XLS • XLSX • PPT • PPTX<br>
-      JPG • JPEG • PNG • GIF • WEBP • CSV • TXT
-    </div>
-  </div>
-
-  <input type="file" id="fileInput" style="display:none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp,.csv,.txt">
-  <div class="file-pill" id="fileInfo"></div>
-  <button class="btn" id="uploadBtn" disabled onclick="uploadCurrentFile()">Upload & Print</button>
-  <div id="status"></div>
-
-  <div class="footer">
-    Managed by <strong>Department of Mechanical Engineering</strong><br>
-    Scan2Print Document Queue
-  </div>
-</div>
-
 <script>
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwIrhCeTAL4oYVwa3wwI0MdYAbD8vieKzKI7CpTCMmX18XbmBmfZXNYgXN2eG0yReSvNg/exec";
 
@@ -223,7 +10,9 @@
 
   function resolveExtension(mimeType) {
     if (!mimeType) return 'pdf';
+
     const type = mimeType.toLowerCase();
+
     if (type.includes('spreadsheetml') || type.includes('excel')) return 'xlsx';
     if (type.includes('wordprocessingml') || type.includes('msword')) return 'docx';
     if (type.includes('presentationml') || type.includes('powerpoint')) return 'pptx';
@@ -233,6 +22,7 @@
     if (type.includes('png')) return 'png';
     if (type.includes('webp')) return 'webp';
     if (type.includes('pdf')) return 'pdf';
+
     return 'pdf';
   }
 
@@ -242,21 +32,40 @@
 
   window.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
+
     if (urlParams.has('shared')) {
-      const cache = await caches.open('scan2print-share-v2');
+
+      // Updated cache version
+      const cache = await caches.open('scan2print-share-v3');
+
       const cachedResponse = await cache.match('incoming_share');
+
       if (cachedResponse) {
         const blob = await cachedResponse.blob();
-        const rawName = cachedResponse.headers.get('X-Original-Name');
-        let fileName = rawName ? decodeURIComponent(rawName) : '';
 
-        if (!fileName || fileName.startsWith('blob') || !fileName.includes('.')) {
+        const rawName = cachedResponse.headers.get('X-Original-Name');
+
+        let fileName = rawName
+          ? decodeURIComponent(rawName)
+          : '';
+
+        if (
+          !fileName ||
+          fileName.startsWith('blob') ||
+          !fileName.includes('.')
+        ) {
           const ext = resolveExtension(blob.type);
           fileName = "Shared_Doc_" + Date.now() + "." + ext;
         }
 
-        activeFile = new File([blob], fileName, { type: blob.type });
+        activeFile = new File(
+          [blob],
+          fileName,
+          { type: blob.type }
+        );
+
         displayFile(activeFile);
+
         await cache.delete('incoming_share');
       }
     }
@@ -276,6 +85,7 @@
   dropArea.addEventListener('drop', (e) => {
     e.preventDefault();
     dropArea.classList.remove('dragover');
+
     if (e.dataTransfer.files.length > 0) {
       activeFile = e.dataTransfer.files[0];
       displayFile(activeFile);
@@ -290,22 +100,41 @@
   });
 
   function displayFile(file) {
-    fileInfo.textContent = `📄 ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
+    fileInfo.textContent =
+      `📄 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+
     fileInfo.style.display = 'block';
+
     uploadBtn.disabled = false;
+
     statusDiv.innerText = "";
   }
 
   function uploadCurrentFile() {
+
     if (!activeFile) return;
 
+    // Block empty / 0-byte files
+    if (activeFile.size === 0) {
+      statusDiv.style.color = "var(--error)";
+      statusDiv.innerText =
+        "❌ File is empty (0.00 MB). Please pick the file directly.";
+
+      uploadBtn.disabled = false;
+      return;
+    }
+
     uploadBtn.disabled = true;
+
     statusDiv.style.color = "var(--primary)";
     statusDiv.innerText = "⏳ Uploading to print queue...";
 
     const reader = new FileReader();
+
     reader.onload = function(e) {
+
       const base64Data = e.target.result.split(',')[1];
+
       const payload = {
         fileName: activeFile.name,
         mimeType: activeFile.type || "application/octet-stream",
@@ -321,18 +150,23 @@
         body: JSON.stringify(payload)
       })
       .then(() => {
+
         statusDiv.style.color = "var(--success)";
-        statusDiv.innerText = "✅ Queued successfully! Printing on station.";
+        statusDiv.innerText =
+          "✅ Queued successfully! Printing on station.";
+
         uploadBtn.disabled = true;
       })
       .catch(err => {
+
         statusDiv.style.color = "var(--error)";
-        statusDiv.innerText = "❌ Upload Error: " + err.toString();
+        statusDiv.innerText =
+          "❌ Upload Error: " + err.toString();
+
         uploadBtn.disabled = false;
       });
     };
+
     reader.readAsDataURL(activeFile);
   }
 </script>
-</body>
-</html>
