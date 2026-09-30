@@ -1,44 +1,44 @@
-const CACHE_NAME = 'scan2print-share-v3';
+const CACHE_KEY = 'scan2print-core-v5';
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', (e) => {
   event.waitUntil(clients.claim());
 });
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
+  // Intercept incoming files shared via Android system share menu
   if (event.request.method === 'POST' && url.pathname.endsWith('index.html')) {
     event.respondWith((async () => {
       try {
         const formData = await event.request.formData();
-        let targetFile = null;
+        let incomingFile = null;
 
-        for (const [key, value] of formData.entries()) {
-          if (value instanceof File && value.size > 0) {
-            targetFile = value;
+        for (const entry of formData.values()) {
+          if (entry instanceof File && entry.size > 0) {
+            incomingFile = entry;
             break;
           }
         }
 
-        if (targetFile) {
-          const cache = await caches.open(CACHE_NAME);
-          const responseToCache = new Response(targetFile, {
+        if (incomingFile) {
+          const cache = await caches.open(CACHE_KEY);
+          const cachedResponse = new Response(incomingFile, {
             headers: {
-              'Content-Type': targetFile.type || 'application/octet-stream',
-              'X-Original-Name': encodeURIComponent(targetFile.name || 'Shared_Document')
+              'Content-Type': incomingFile.type || 'application/octet-stream',
+              'X-Original-Name': encodeURIComponent(incomingFile.name || 'Mobile_Upload.pdf')
             }
           });
-          await cache.put('incoming_share', responseToCache);
+          await cache.put('pending_share', cachedResponse);
         }
       } catch (err) {
         console.error('ServiceWorker Share Target Error:', err);
       }
-
-      return Response.redirect('./index.html?shared=1', 303);
+      return Response.redirect('./index.html?shared=true', 303);
     })());
   }
 });
