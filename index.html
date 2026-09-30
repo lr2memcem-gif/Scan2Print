@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scan2Print - Mechanical Department</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Scan2Print Kiosk</title>
   <link rel="manifest" href="manifest.json">
   <style>
     :root {
@@ -168,7 +168,7 @@
   <div class="gear-icon">⚙️</div>
   <div><span class="badge">Mechanical Engineering Dept</span></div>
   <h1>Scan2Print</h1>
-  <p class="subtitle">Upload files directly to the department print queue</p>
+  <p class="subtitle">Direct mobile dispatch to department print queue</p>
 
   <div class="dropzone" id="dropArea">
     <div class="tray-icon">📥</div>
@@ -187,12 +187,12 @@
 
   <div class="footer">
     Managed by <strong>Department of Mechanical Engineering</strong><br>
-    Scan2Print Document Queue
+    Scan2Print Station
   </div>
 </div>
 
 <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwIrhCeTAL4oYVwa3wwI0MdYAbD8vieKzKI7CpTCMmX18XbmBmfZXNYgXN2eG0yReSvNg/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkBOkMiG44nzyXWEPAsu_aBDmJgDzCpgSDYDxBzdJ8y_wbA4F0rz4_IYYlW5n-R3WeYA/exec";
 
   let activeFile = null;
   const dropArea = document.getElementById('dropArea');
@@ -203,16 +203,15 @@
 
   function resolveExtension(mimeType) {
     if (!mimeType) return 'pdf';
-    const type = mimeType.toLowerCase();
-    if (type.includes('spreadsheetml') || type.includes('excel')) return 'xlsx';
-    if (type.includes('wordprocessingml') || type.includes('msword')) return 'docx';
-    if (type.includes('presentationml') || type.includes('powerpoint')) return 'pptx';
-    if (type.includes('csv')) return 'csv';
-    if (type.includes('plain')) return 'txt';
-    if (type.includes('jpeg')) return 'jpg';
-    if (type.includes('png')) return 'png';
-    if (type.includes('webp')) return 'webp';
-    if (type.includes('pdf')) return 'pdf';
+    const t = mimeType.toLowerCase();
+    if (t.includes('spreadsheetml') || t.includes('excel')) return 'xlsx';
+    if (t.includes('wordprocessingml') || t.includes('msword')) return 'docx';
+    if (t.includes('presentationml') || t.includes('powerpoint')) return 'pptx';
+    if (t.includes('csv')) return 'csv';
+    if (t.includes('plain')) return 'txt';
+    if (t.includes('jpeg')) return 'jpg';
+    if (t.includes('png')) return 'png';
+    if (t.includes('webp')) return 'webp';
     return 'pdf';
   }
 
@@ -223,21 +222,20 @@
   window.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('shared')) {
-      const cache = await caches.open('scan2print-share-v3');
-      const cachedResponse = await cache.match('incoming_share');
+      const cache = await caches.open('scan2print-core-v5');
+      const cachedResponse = await cache.match('pending_share');
       if (cachedResponse) {
         const blob = await cachedResponse.blob();
         const rawName = cachedResponse.headers.get('X-Original-Name');
         let fileName = rawName ? decodeURIComponent(rawName) : '';
 
         if (!fileName || fileName.startsWith('blob') || !fileName.includes('.')) {
-          const ext = resolveExtension(blob.type);
-          fileName = "Shared_Doc_" + Date.now() + "." + ext;
+          fileName = "Shared_Doc_" + Date.now() + "." + resolveExtension(blob.type);
         }
 
         activeFile = new File([blob], fileName, { type: blob.type });
         displayFile(activeFile);
-        await cache.delete('incoming_share');
+        await cache.delete('pending_share');
       }
     }
   });
@@ -270,7 +268,7 @@
   });
 
   function displayFile(file) {
-    fileInfo.textContent = "📄 " + file.name + " (" + (file.size/1024/1024).toFixed(2) + " MB)";
+    fileInfo.textContent = "📄 " + file.name + " (" + (file.size / 1024 / 1024).toFixed(2) + " MB)";
     fileInfo.style.display = 'block';
     uploadBtn.disabled = false;
     statusDiv.innerText = "";
@@ -281,7 +279,7 @@
 
     if (activeFile.size === 0) {
       statusDiv.style.color = "var(--error)";
-      statusDiv.innerText = "❌ File is empty (0.00 MB). Please pick the file directly.";
+      statusDiv.innerText = "❌ File is empty (0.00 MB). Please choose the file directly.";
       uploadBtn.disabled = false;
       return;
     }
